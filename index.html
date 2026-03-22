@@ -9,6 +9,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <style>
         :root {
             --mts-verde: #1B6B2F;
@@ -379,8 +381,8 @@
             </div>
         </div>
         <div id="connection-badge" onclick="resetData()"
-            style="background: var(--mts-acento); color: #000; font-size: 0.6rem; padding: 4px 8px; border-radius: 10px; font-weight: 800; cursor: pointer;">
-            LOCAL DB</div>
+            style="background: #ccc; color: #000; font-size: 0.6rem; padding: 4px 8px; border-radius: 10px; font-weight: 800; cursor: pointer; transition: all 0.5s;">
+            CONECTANDO...</div>
     </header>
 
     <main>
@@ -531,7 +533,7 @@
 
                 <button class="secondary" onclick="exportCSV()">📁 EXPORTAR RESULTADOS (CSV)</button>
                 <p style="text-align: center; color: #bbb; font-size: 0.7rem; margin-top: 1rem;">
-                    Arbieto 2026 - MTS Data System v1.0 
+                    Arbieto 2026 - MTS Data System v1.0
                     <span onclick="resetData()" style="cursor: pointer; opacity: 0.2; margin-left: 5px;">⚙️</span>
                 </p>
             </div>
@@ -544,6 +546,67 @@
     </div>
 
     <script>
+        // === MÓDULO: FIREBASE ===
+        const firebaseConfig = {
+            apiKey: "AIzaSyDs_TBzPGR3Hcxt8KOULHhj9Hd3J_1IyFw",
+            authDomain: "arbieto-electoral.firebaseapp.com",
+            projectId: "arbieto-electoral",
+            storageBucket: "arbieto-electoral.firebasestorage.app",
+            messagingSenderId: "635386843093",
+            appId: "1:635386843093:web:97ee81b3d91f6de7f4375c",
+            databaseURL: "https://arbieto-electoral-default-rtdb.firebaseio.com/"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const fbDB = firebase.database();
+
+        function updateConnectionStatus(isOnline) {
+            const badge = document.getElementById('connection-badge');
+            if (isOnline) {
+                badge.innerText = "☁️ CLOUD SYNC";
+                badge.style.background = "#2E9448";
+                badge.style.color = "white";
+            } else {
+                badge.innerText = "⚠️ MODO LOCAL";
+                badge.style.background = "#ffc107";
+                badge.style.color = "black";
+            }
+        }
+
+        // Monitorear conexión
+        fbDB.ref(".info/connected").on("value", snap => {
+            updateConnectionStatus(snap.val() === true);
+        });
+
+        let isSyncing = false;
+        function startCloudSync() {
+            if (isSyncing || !db) return;
+            isSyncing = true;
+
+            fbDB.ref("actas").on("value", snapshot => {
+                const data = snapshot.val();
+                if (data) {
+                    const cloudList = Object.values(data);
+                    state.actas = cloudList;
+
+                    // Sincronizar silenciosamente con IndexedDB
+                    const tx = db.transaction(["actas"], "readwrite");
+                    const store = tx.objectStore("actas");
+                    cloudList.forEach(a => store.put(a));
+
+                    updateGlobalProgress();
+                    updateMesas();
+                    if (document.getElementById('view-stats').classList.contains('active')) renderStats();
+                }
+            }, err => {
+                console.error("Error de Firebase:", err);
+                if (err.code === "PERMISSION_DENIED") {
+                    console.warn("⚠️ Acceso denegado. Asegúrate de poner la Realtime Database en 'Modo de Prueba'.");
+                }
+            });
+        }
+
         // === MÓDULO: DATOS ===
         const PARTIDOS = [
             { id: 1, sigla: "MTS", nombre: "MOVIMIENTO TERCER SISTEMA", color: "#238936" },
@@ -599,6 +662,8 @@
             request.onsuccess = () => {
                 state.actas = request.result;
                 updateGlobalProgress();
+                // Iniciar sincronización tras cargar datos locales
+                startCloudSync();
             };
         }
 
@@ -721,6 +786,12 @@
 
             const tx = db.transaction(["actas"], "readwrite");
             tx.objectStore("actas").put(acta);
+
+            // Sincronizar con Firebase
+            if (typeof fbDB !== 'undefined') {
+                fbDB.ref("actas/" + key).set(acta);
+            }
+
             tx.oncomplete = () => {
                 loadActas();
                 showView('home');
@@ -729,10 +800,19 @@
 
         function updateGlobalProgress() {
             let totalExpected = 0;
-            RECINTOS.forEach(r => totalExpected += r.mesas.length * 2);
-            const progress = (state.actas.length / totalExpected) * 100;
+            RECINTOS.forEach(r => totalExpected += r.mesas.length);
+
+            // Contar mesas únicas registradas (independiente de si es alcalde, concejal o ambos)
+            const uniqueTables = new Set();
+            state.actas.forEach(a => {
+                uniqueTables.add(`${a.recinto_id}_${a.mesa_id}`);
+            });
+
+            const computedCount = uniqueTables.size;
+            const progress = (computedCount / totalExpected) * 100;
+
             document.getElementById('global-progress-val').innerText = progress.toFixed(1) + "%";
-            document.getElementById('global-actas-count').innerText = state.actas.length;
+            document.getElementById('global-actas-count').innerText = computedCount;
             document.getElementById('progress-bar').style.width = progress + "%";
         }
 
@@ -854,8 +934,8 @@
 
         async function resetData() {
             const code = prompt("🔑 SEGURIDAD DEL SISTEMA\n\nIngrese el código de autorización para resetear la base de datos:");
-            
-            if (code === null) return; 
+
+            if (code === null) return;
             if (code !== '4535468') {
                 alert("❌ CÓDIGO INCORRECTO. Acceso denegado.");
                 return;
@@ -868,8 +948,11 @@
             const tx = db.transaction(["actas"], "readwrite");
             const store = tx.objectStore("actas");
             const clearRequest = store.clear();
-            
+
             clearRequest.onsuccess = () => {
+                // Borrar también de Firebase
+                if (typeof fbDB !== 'undefined') fbDB.ref("actas").remove();
+
                 state.actas = [];
                 updateGlobalProgress();
                 updateMesas();
