@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SISTEMA ELECTORAL - ARBIETO 2026 (MTS)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --mts-verde: #1B6B2F;
+            --mts-verde-sec: #2E9448;
+            --mts-blanco: #FFFFFF;
+            --mts-negro: #121212;
+            --mts-gris: #F8FAF8;
+            --mts-acento: #FFD700;
+            --mts-borde: #E2E8E2;
+            --mts-shadow: 0 4px 20px -5px rgba(27, 107, 47, 0.15);
+            --mts-radius: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--mts-gris);
+            color: var(--mts-negro);
+            padding-bottom: 100px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--mts-verde) 0%, var(--mts-verde-sec) 100%);
+            color: white;
+            padding: 1.25rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-logo {
+            height: 48px;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+            transition: transform 0.3s ease;
+        }
+
+        .header-logo:hover {
+            transform: scale(1.1);
+        }
+
+        main {
+            padding: 1rem;
+            max-width: 900px;
+            margin: auto;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--mts-radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--mts-shadow);
+            border: 1px solid var(--mts-borde);
+            transition: transform 0.2s ease;
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1.25rem;
+            color: var(--mts-verde);
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .selector-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        select,
+        input {
+            width: 100%;
+            padding: 0.9rem;
+            border: 2px solid var(--mts-borde);
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            outline: none;
+            background: #fff;
+        }
+
+        select:focus,
+        input:focus {
+            border-color: var(--mts-verde);
+            box-shadow: 0 0 0 4px rgba(27, 107, 47, 0.1);
+        }
+
+        button {
+            background: var(--mts-verde);
+            color: white;
+            border: none;
+            padding: 1.1rem;
+            border-radius: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1rem;
+            box-shadow: 0 4px 12px rgba(27, 107, 47, 0.3);
+            transition: all 0.2s;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button:hover {
+            background: var(--mts-verde-sec);
+            box-shadow: 0 6px 16px rgba(27, 107, 47, 0.4);
+        }
+
+        button.secondary {
+            background: #f0f0f0;
+            color: #444;
+            box-shadow: none;
+            margin-top: 0.75rem;
+        }
+
+        .tabs {
+            display: flex;
+            background: #eee;
+            padding: 4px;
+            border-radius: 12px;
+            gap: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 0.75rem;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            color: #777;
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: var(--mts-verde);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .voting-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+
+        .voting-table td {
+            background: #fbfbfb;
+            padding: 1rem;
+            border-top: 1px solid var(--mts-borde);
+            border-bottom: 1px solid var(--mts-borde);
+        }
+
+        .voting-table tr td:first-child {
+            border-left: 1px solid var(--mts-borde);
+            border-radius: 12px 0 0 12px;
+        }
+
+        .voting-table tr td:last-child {
+            border-right: 1px solid var(--mts-borde);
+            border-radius: 0 12px 12px 0;
+        }
+
+        .party-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            background: white;
+        }
+
+        .input-votos {
+            width: 90px;
+            font-weight: 700;
+            color: var(--mts-verde);
+            text-align: center;
+        }
+
+        .winner-tag {
+            background: var(--mts-acento);
+            color: var(--mts-negro);
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .view {
+            display: none;
+        }
+
+        .view.active {
+            display: block;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f9fdf9 100%);
+            padding: 1.25rem;
+            border-radius: 16px;
+            text-align: center;
+            border: 1px solid var(--mts-borde);
+        }
+
+        .stat-val {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--mts-verde);
+        }
+
+        .winner-card {
+            background: var(--mts-verde);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 8px 24px rgba(27, 107, 47, 0.3);
+        }
+
+        .footer-nav {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            display: flex;
+            border-radius: 25px;
+            padding: 6px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            width: 90%;
+            max-width: 400px;
+            z-index: 2000;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .nav-item {
+            flex: 1;
+            padding: 0.9rem;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 20px;
+            font-weight: 700;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        .nav-item.active {
+            background: var(--mts-verde);
+            color: white;
+            box-shadow: 0 4px 12px rgba(27, 107, 47, 0.25);
+        }
+
+        .badge-registered {
+            background: #D4EDDA;
+            color: #155724;
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-weight: 700;
+            margin-left: 5px;
+        }
+
+        /* Chart adjustments */
+        .chart-container {
+            position: relative;
+            margin-bottom: 2rem;
+            height: 320px;
+            width: 100%;
+        }
+
+        @media (max-width: 480px) {
+            .selector-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .voting-table td {
+                padding: 0.75rem 0.5rem;
+            }
+
+            .party-logo {
+                width: 40px;
+                height: 40px;
+            }
+
+            .stat-val {
+                font-size: 1.4rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <img src="Partidos/1_MTS.png" alt="MTS" class="header-logo" onerror="this.style.display='none'">
+            <div>
+                <h1 style="font-size: 1rem; text-transform: uppercase; letter-spacing: 1px;">Elecciones Subnacionales
+                    Arbieto 2026</h1>
+                <p style="font-size: 0.65rem; opacity: 0.9; font-weight: 300;">MOVIMIENTO TERCER SISTEMA - SISTEMA DE
+                    CONTROL ELECTORAL</p>
+            </div>
+        </div>
+        <div id="connection-badge" onclick="resetData()"
+            style="background: var(--mts-acento); color: #000; font-size: 0.6rem; padding: 4px 8px; border-radius: 10px; font-weight: 800; cursor: pointer;">
+            LOCAL DB</div>
+    </header>
+
+    <main>
+        <div id="view-home" class="view active">
+            <div class="card" style="border-bottom: 4px solid var(--mts-acento);">
+                <h2
+                    style="font-size: 1.8rem; color: var(--mts-verde); margin-bottom: 0.2rem; text-transform: uppercase;">
+                    📍 Registro de Acta</h2>
+                <p style="font-size: 1rem; color: #555; margin-bottom: 1.5rem; font-weight: 500;">Seleccione los datos
+                    para iniciar el escrutinio:</p>
+
+                <div class="selector-grid">
+                    <div>
+                        <label style="font-size: 0.9rem; color: var(--mts-verde); font-weight: 700;">1. Seleccionar
+                            Recinto</label>
+                        <select id="recinto-select" onchange="updateMesas()" style="border-color: #bcd4bc;"></select>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.9rem; color: var(--mts-verde); font-weight: 700;">2. Mesa
+                            Electoral</label>
+                        <select id="mesa-select" style="border-color: #bcd4bc;"></select>
+                    </div>
+                </div>
+
+                <label
+                    style="font-size: 1.1rem; color: var(--mts-verde); font-weight: 800; margin-top: 1rem; display: block; text-align: center; border-top: 1px solid #eee; padding-top: 1rem;">3.
+                    Categoría de Sufragio:</label>
+                <div class="tabs" style="margin-top: 1rem; background: #e0eee0; padding: 6px;">
+                    <div id="cat-alcalde" class="tab-btn active" onclick="setCategory('alcalde')"
+                        style="font-size: 1.1rem; padding: 1rem;">ALCALDE</div>
+                    <div id="cat-concejales" class="tab-btn" onclick="setCategory('concejales')"
+                        style="font-size: 1.1rem; padding: 1rem;">CONCEJALES</div>
+                </div>
+
+                <button onclick="startVoting()"
+                    style="background: linear-gradient(to right, var(--mts-verde), var(--mts-verde-sec)); padding: 1.4rem; font-size: 1.2rem; margin-top: 1.5rem;">INICIAR
+                    REGISTRO</button>
+            </div>
+
+            <div class="card">
+                <h2>📈 Escrutinio Municipal</h2>
+                <div class="stats-summary">
+                    <div class="stat-card">
+                        <div class="stat-val" id="global-progress-val">0.0%</div>
+                        <label>Mesas Computadas</label>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-val" id="global-actas-count">0</div>
+                        <label>Total Actas</label>
+                    </div>
+                </div>
+                <div style="background: #eee; height: 12px; border-radius: 10px; overflow: hidden;">
+                    <div id="progress-bar"
+                        style="background: var(--mts-verde); height: 100%; width: 0%; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA: FORMULARIO -->
+        <div id="view-form" class="view">
+            <div class="card" style="border-top: 5px solid var(--mts-verde);">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+                    <div>
+                        <h2 style="margin-bottom: 0.2rem;" id="form-recinto-name">Recinto</h2>
+                        <span
+                            style="background: var(--mts-verde); color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700;"
+                            id="form-mesa-tag">Mesa 0</span>
+                        <span
+                            style="background: #000; color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; margin-left: 5px;"
+                            id="form-cat-tag">ALCALDE</span>
+                    </div>
+                    <button class="secondary" style="width: auto; padding: 0.5rem 1rem; margin-top: 0;"
+                        onclick="showView('home')">X</button>
+                </div>
+
+                <table class="voting-table">
+                    <tbody id="voting-rows">
+                        <!-- Dynamic rows -->
+                    </tbody>
+                </table>
+
+                <div class="card" style="box-shadow: none; border-color: #f0f0f0; margin-top: 1rem; padding: 1rem;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div>
+                            <label>Blancos</label>
+                            <input type="number" id="votos-blancos" value="0" min="0" oninput="calculateTotal()">
+                        </div>
+                        <div>
+                            <label>Nulos</label>
+                            <input type="number" id="votos-nulos" value="0" min="0" oninput="calculateTotal()">
+                        </div>
+                    </div>
+                    <div
+                        style="margin-top: 1rem; display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #ccc; padding-top: 1rem;">
+                        <span style="font-weight: 700; color: #555;">TOTAL SUFRAGIOS:</span>
+                        <span style="font-size: 1.5rem; font-weight: 900; color: var(--mts-verde);"
+                            id="total-general">0</span>
+                    </div>
+                </div>
+
+                <button onclick="saveActa()" style="margin-top: 1rem;">CONFIRMAR Y GUARDAR ACTA</button>
+            </div>
+        </div>
+
+        <!-- VISTA: ESTADÍSTICAS -->
+        <div id="view-stats" class="view">
+            <div id="winner-banner" class="winner-card" style="display: none;">
+                <div>
+                    <h3 style="font-weight: 400; font-size: 0.9rem; opacity: 0.9;">TENDENCIA LÍDER</h3>
+                    <h2 id="lead-party-name" style="color: white; margin: 0.2rem 0; font-size: 1.5rem;">PARTIDO</h2>
+                    <span id="lead-party-percent"
+                        style="font-size: 1rem; font-weight: 800; background: var(--mts-acento); color: #000; padding: 2px 8px; border-radius: 8px;">0.0%</span>
+                </div>
+                <img id="lead-party-img" src=""
+                    style="width: 70px; height: 70px; border-radius: 50%; border: 4px solid rgba(255,255,255,0.2); background: #fff;">
+            </div>
+
+            <div class="card">
+                <div class="tabs">
+                    <div id="stat-tab-alcalde" class="tab-btn active" onclick="setStatCategory('alcalde')">ALCALDE</div>
+                    <div id="stat-tab-concejales" class="tab-btn" onclick="setStatCategory('concejales')">CONCEJALES
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="barChart"></canvas>
+                </div>
+
+                <div id="dhondt-section" style="display: none;">
+                    <h2 style="border-top: 1px solid #eee; padding-top: 1.5rem;">⚖️ Distribución de Concejales (D'Hondt)
+                    </h2>
+                    <table class="voting-table" style="margin-bottom: 2rem;">
+                        <thead>
+                            <tr style="text-align: left; font-size: 0.8rem; color: #666;">
+                                <th style="padding: 0.5rem 1rem;">PARTIDO</th>
+                                <th style="padding: 0.5rem 1rem; text-align: center;">ESCAÑOS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dhondt-rows"></tbody>
+                    </table>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="pieChart"></canvas>
+                </div>
+
+                <button class="secondary" onclick="exportCSV()">📁 EXPORTAR RESULTADOS (CSV)</button>
+                <p style="text-align: center; color: #bbb; font-size: 0.7rem; margin-top: 1rem;">
+                    Arbieto 2026 - MTS Data System v1.0 
+                    <span onclick="resetData()" style="cursor: pointer; opacity: 0.2; margin-left: 5px;">⚙️</span>
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <div class="footer-nav">
+        <div class="nav-item active" id="nav-home" onclick="showView('home')">PANEL</div>
+        <div class="nav-item" id="nav-stats" onclick="showView('stats')">REPORTES</div>
+    </div>
+
+    <script>
+        // === MÓDULO: DATOS ===
+        const PARTIDOS = [
+            { id: 1, sigla: "MTS", nombre: "MOVIMIENTO TERCER SISTEMA", color: "#238936" },
+            { id: 2, sigla: "PATRIA-UNIDOS", nombre: "ALIANZA PATRIA", color: "#ff8c00" },
+            { id: 3, sigla: "NI", nombre: "NUEVAS IDEAS", color: "#2E86C1" },
+            { id: 4, sigla: "PDC", nombre: "PARTIDO DEMÓCRATA CRISTIANO", color: "#c42d2d" },
+            { id: 5, sigla: "A-UPP", nombre: "ALIANZA - UNIDOS POR LOS PUEBLOS", color: "#faff00" },
+            { id: 6, sigla: "UN", nombre: "UNIDAD NACIONAL", color: "#fce700" },
+            { id: 7, sigla: "UNIDOS", nombre: "UNIDOS", color: "#ff0000" },
+            { id: 8, sigla: "NGP", nombre: "NUEVA GENERACIÓN PATRIOTICA", color: "#009dff" }
+        ];
+
+        // Recintos de Arbieto (Muestra expandida)
+        const RECINTOS = [
+            { id: 3040301, nombre: "Arbieto - Centro Educativo German Busch Arbieto", mesas: [1, 2, 3, 4, 5, 6, 7, 8] },
+            { id: 3040302, nombre: "Mamanaca - Unidad Educativa 6 de Junio Mamanaca", mesas: [1, 2, 3, 4] },
+            { id: 3040303, nombre: "Aranjuez - Unidad Educativa Antonio Arnez Aranjuez", mesas: [1, 2] },
+            { id: 3040304, nombre: "Arpita - Escuela Seccional Arpita", mesas: [1, 2, 3, 4] },
+            { id: 3040305, nombre: "Llave Mayu - Unidad Educativa Carlos Canelas Canelas", mesas: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20] },
+            { id: 3040306, nombre: "T’ajra - U.E. Betty Barrientos", mesas: [1, 2, 3] },
+            { id: 3040307, nombre: "Angostura - U. E. Casimiro López Terrazas", mesas: [1, 2, 3, 4, 5] }
+        ];
+
+        let state = {
+            currentCategory: 'Alcalde',
+            selectedRecinto: null,
+            selectedMesa: null,
+            actas: [],
+            statCategory: 'Alcalde'
+        };
+
+        // === MÓDULO: INDEXEDDB ===
+        let db;
+        function initDB() {
+            const request = indexedDB.open("EleccionesArbieto", 2);
+            request.onupgradeneeded = e => {
+                db = e.target.result;
+                if (!db.objectStoreNames.contains("actas")) {
+                    const store = db.createObjectStore("actas", { keyPath: "key" });
+                    store.createIndex("recinto_id", "recinto_id", { unique: false });
+                }
+            };
+            request.onsuccess = e => {
+                db = e.target.result;
+                loadActas();
+            };
+        }
+
+        async function loadActas() {
+            const transaction = db.transaction(["actas"], "readonly");
+            const store = transaction.objectStore("actas");
+            const request = store.getAll();
+            request.onsuccess = () => {
+                state.actas = request.result;
+                updateGlobalProgress();
+            };
+        }
+
+        // === MÓDULO: UI / NAVEGACIÓN ===
+        function showView(viewName) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(`view-${viewName}`).classList.add('active');
+
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(`nav-${viewName}`).classList.add('active');
+
+            if (viewName === 'stats') renderStats();
+            window.scrollTo(0, 0);
+        }
+
+        function populateRecintos() {
+            const select = document.getElementById('recinto-select');
+            select.innerHTML = '<option value="" disabled selected>-- SELECCIONE UN RECINTO --</option>' +
+                RECINTOS.map(r => `<option value="${r.id}">${r.nombre}</option>`).join('');
+            updateMesas();
+        }
+
+        function updateMesas() {
+            const recintoId = document.getElementById('recinto-select').value;
+            const select = document.getElementById('mesa-select');
+
+            if (!recintoId) {
+                select.innerHTML = '<option value="" disabled selected>-- PRIMERO ELIJA RECINTO --</option>';
+                return;
+            }
+
+            const recinto = RECINTOS.find(r => r.id == recintoId);
+            select.innerHTML = '<option value="" disabled selected>-- SELECCIONE MESA --</option>' +
+                recinto.mesas.map(m => {
+                    const isReg = state.actas.some(a => a.recinto_id == recintoId && a.mesa_id == m && a.categoria == state.currentCategory);
+                    return `<option value="${m}">${isReg ? '✓' : ''} Mesa ${m}</option>`;
+                }).join('');
+        }
+
+        function setCategory(cat) {
+            state.currentCategory = cat;
+            document.getElementById('cat-alcalde').classList.toggle('active', cat === 'alcalde');
+            document.getElementById('cat-concejales').classList.toggle('active', cat === 'concejales');
+            updateMesas();
+        }
+
+        function startVoting() {
+            state.selectedRecinto = document.getElementById('recinto-select').value;
+            state.selectedMesa = document.getElementById('mesa-select').value;
+
+            if (!state.selectedRecinto || !state.selectedMesa) {
+                alert("⚠️ POR FAVOR: Seleccione el RECINTO y la MESA antes de continuar.");
+                return;
+            }
+
+            const recintoObj = RECINTOS.find(r => r.id == state.selectedRecinto);
+            document.getElementById('form-recinto-name').innerText = recintoObj.nombre;
+            document.getElementById('form-mesa-tag').innerText = "Mesa " + state.selectedMesa;
+            document.getElementById('form-cat-tag').innerText = state.currentCategory.toUpperCase();
+
+            renderVotingForm();
+            showView('form');
+        }
+
+        function renderVotingForm() {
+            const container = document.getElementById('voting-rows');
+            const key = `${state.selectedRecinto}_${state.selectedMesa}_${state.currentCategory}`;
+            const existing = state.actas.find(a => a.key === key);
+
+            container.innerHTML = PARTIDOS.map(p => `
+                <tr>
+                    <td style="width: 60px;">
+                        <img src="Partidos/${p.id}_${p.sigla}.png" class="party-logo" onerror="this.src='https://via.placeholder.com/40'">
+                    </td>
+                    <td>
+                        <div style="font-weight:700; font-size:0.9rem;">${p.sigla}</div>
+                        <div style="font-size:0.65rem; color:#888;">${p.nombre}</div>
+                    </td>
+                    <td style="text-align: right;">
+                        <input type="number" class="input-votos" 
+                            data-party-id="${p.id}" 
+                            value="${existing ? (existing.votos[p.id] || 0) : 0}" 
+                            min="0" oninput="calculateTotal()">
+                    </td>
+                </tr>
+            `).join('');
+
+            document.getElementById('votos-blancos').value = existing ? existing.blancos : 0;
+            document.getElementById('votos-nulos').value = existing ? existing.nulos : 0;
+            calculateTotal();
+        }
+
+        function calculateTotal() {
+            let totalValidos = 0;
+            document.querySelectorAll('#voting-rows .input-votos').forEach(input => {
+                totalValidos += parseInt(input.value) || 0;
+            });
+            const blancos = parseInt(document.getElementById('votos-blancos').value) || 0;
+            const nulos = parseInt(document.getElementById('votos-nulos').value) || 0;
+            document.getElementById('total-general').innerText = totalValidos + blancos + nulos;
+        }
+
+        async function saveActa() {
+            const key = `${state.selectedRecinto}_${state.selectedMesa}_${state.currentCategory}`;
+            const votos = {};
+            let totalValidos = 0;
+            document.querySelectorAll('#voting-rows .input-votos').forEach(input => {
+                const val = parseInt(input.value) || 0;
+                votos[input.dataset.partyId] = val;
+                totalValidos += val;
+            });
+
+            const acta = {
+                key, recinto_id: state.selectedRecinto, mesa_id: state.selectedMesa,
+                categoria: state.currentCategory, votos, totalValidos,
+                blancos: parseInt(document.getElementById('votos-blancos').value) || 0,
+                nulos: parseInt(document.getElementById('votos-nulos').value) || 0,
+                timestamp: new Date().toISOString()
+            };
+
+            const tx = db.transaction(["actas"], "readwrite");
+            tx.objectStore("actas").put(acta);
+            tx.oncomplete = () => {
+                loadActas();
+                showView('home');
+            };
+        }
+
+        function updateGlobalProgress() {
+            let totalExpected = 0;
+            RECINTOS.forEach(r => totalExpected += r.mesas.length * 2);
+            const progress = (state.actas.length / totalExpected) * 100;
+            document.getElementById('global-progress-val').innerText = progress.toFixed(1) + "%";
+            document.getElementById('global-actas-count').innerText = state.actas.length;
+            document.getElementById('progress-bar').style.width = progress + "%";
+        }
+
+        // === MÓDULO: GRÁFICOS ===
+        let barChart, pieChart;
+        function setStatCategory(cat) {
+            state.statCategory = cat;
+            document.getElementById('stat-tab-alcalde').classList.toggle('active', cat === 'alcalde');
+            document.getElementById('stat-tab-concejales').classList.toggle('active', cat === 'concejales');
+            renderStats();
+        }
+
+        function renderStats() {
+            const filtered = state.actas.filter(a => a.categoria === state.statCategory);
+            const totals = {};
+            let totalVal = 0;
+            PARTIDOS.forEach(p => totals[p.id] = 0);
+
+            filtered.forEach(a => {
+                Object.keys(a.votos).forEach(pid => {
+                    totals[pid] += a.votos[pid];
+                    totalVal += a.votos[pid];
+                });
+            });
+
+            // Winner Banner
+            if (totalVal > 0) {
+                const sorted = [...PARTIDOS].sort((a, b) => totals[b.id] - totals[a.id]);
+                const winner = sorted[0];
+                const percent = ((totals[winner.id] / totalVal) * 100).toFixed(1);
+                document.getElementById('winner-banner').style.display = 'flex';
+                document.getElementById('lead-party-name').innerText = winner.sigla;
+                document.getElementById('lead-party-percent').innerText = percent + "%";
+                document.getElementById('lead-party-img').src = `Partidos/${winner.id}_${winner.sigla}.png`;
+            } else {
+                document.getElementById('winner-banner').style.display = 'none';
+            }
+
+            // Charts
+            const chartData = {
+                labels: PARTIDOS.map(p => p.sigla),
+                datasets: [{
+                    label: 'Votos',
+                    data: PARTIDOS.map(p => totals[p.id]),
+                    backgroundColor: PARTIDOS.map(p => p.color),
+                    borderRadius: 8
+                }]
+            };
+
+            if (barChart) barChart.destroy();
+            barChart = new Chart(document.getElementById('barChart'), {
+                type: 'bar',
+                data: chartData,
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { x: { grid: { display: false } } }
+                }
+            });
+
+            if (pieChart) pieChart.destroy();
+            pieChart = new Chart(document.getElementById('pieChart'), {
+                type: 'doughnut',
+                data: chartData,
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+
+            // D'Hondt
+            if (state.statCategory === 'concejales' && totalVal > 0) {
+                renderDHondt(totals);
+            } else {
+                document.getElementById('dhondt-section').style.display = 'none';
+            }
+        }
+
+        function renderDHondt(votosMap) {
+            document.getElementById('dhondt-section').style.display = 'block';
+            const seats = 7;
+            const table = [];
+            PARTIDOS.forEach(p => {
+                const v = votosMap[p.id] || 0;
+                for (let i = 1; i <= seats; i++) table.push({ pid: p.id, val: v / i });
+            });
+            table.sort((a, b) => b.val - a.val);
+            const winners = table.slice(0, seats);
+            const dist = {};
+            winners.forEach(w => dist[w.pid] = (dist[w.pid] || 0) + 1);
+
+            document.getElementById('dhondt-rows').innerHTML = PARTIDOS
+                .filter(p => dist[p.id])
+                .sort((a, b) => dist[b.id] - dist[a.id])
+                .map(p => `
+                    <tr>
+                        <td>
+                            <div style="font-weight:700;">${p.sigla}</div>
+                            <div style="font-size:0.6rem; color:#888;">${p.nombre}</div>
+                        </td>
+                        <td style="text-align:center; font-size:1.5rem; font-weight:900; color:var(--mts-verde);">${dist[p.id]}</td>
+                    </tr>
+                `).join('');
+        }
+
+        function exportCSV() {
+            let csv = "Acta,Recinto,Mesa,Categoria,MTS,PATRIA,NI,PDC,ALIANZA,UN,UNIDOS,NGP,Blancos,Nulos,TotalValidos\n";
+            state.actas.forEach(a => {
+                const r = RECINTOS.find(rec => rec.id == a.recinto_id);
+                const v = a.votos;
+                csv += `${a.key},${r.nombre},${a.mesa_id},${a.categoria},${v[1] || 0},${v[2] || 0},${v[3] || 0},${v[4] || 0},${v[5] || 0},${v[6] || 0},${v[7] || 0},${v[8] || 0},${a.blancos},${a.nulos},${a.totalValidos}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `RESULTADOS_ARBIETO_${new Date().getTime()}.csv`;
+            link.click();
+        }
+
+        async function resetData() {
+            const code = prompt("🔑 SEGURIDAD DEL SISTEMA\n\nIngrese el código de autorización para resetear la base de datos:");
+            
+            if (code === null) return; 
+            if (code !== '4535468') {
+                alert("❌ CÓDIGO INCORRECTO. Acceso denegado.");
+                return;
+            }
+
+            if (!confirm("⚠️ ¿BORRAR TODO? Esta acción eliminará permanentemente todas las actas registradas en este dispositivo.\n\n¿Desea continuar?")) {
+                return;
+            }
+
+            const tx = db.transaction(["actas"], "readwrite");
+            const store = tx.objectStore("actas");
+            const clearRequest = store.clear();
+            
+            clearRequest.onsuccess = () => {
+                state.actas = [];
+                updateGlobalProgress();
+                updateMesas();
+                if (document.getElementById('view-stats').classList.contains('active')) {
+                    renderStats();
+                }
+                alert("✅ BASE DE DATOS RESETEADA CON ÉXITO.");
+            };
+
+            clearRequest.onerror = () => {
+                alert("❌ Error al intentar resetear los datos.");
+            };
+        }
+
+        window.onload = () => { initDB(); populateRecintos(); };
+    </script>
+</body>
+
+</html>
