@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <style>
@@ -531,6 +532,23 @@
                     <canvas id="pieChart"></canvas>
                 </div>
 
+                <div id="votos-summary-section" style="margin-top: 2rem; margin-bottom: 2rem;">
+                    <h2 style="border-top: 1px solid #eee; padding-top: 1.5rem;">📊 Escrutinio Consolidado</h2>
+                    <table class="voting-table">
+                        <thead>
+                            <tr style="text-align: left; font-size: 0.8rem; color: #666;">
+                                <th style="padding: 0.5rem 1rem;">PARTIDO</th>
+                                <th style="padding: 0.5rem 1rem; text-align: right;">VOTOS</th>
+                                <th style="padding: 0.5rem 1rem; text-align: right;">%</th>
+                            </tr>
+                        </thead>
+                        <tbody id="votos-rows"></tbody>
+                        <tfoot id="votos-footer">
+                            <!-- Blancos, Nulos, Total -->
+                        </tfoot>
+                    </table>
+                </div>
+
                 <button class="secondary" onclick="exportCSV()">📁 EXPORTAR RESULTADOS (CSV)</button>
                 <p style="text-align: center; color: #bbb; font-size: 0.7rem; margin-top: 1rem;">
                     Arbieto 2026 - MTS Data System v1.0
@@ -818,6 +836,8 @@
 
         // === MÓDULO: GRÁFICOS ===
         let barChart, pieChart;
+        Chart.register(ChartDataLabels);
+
         function setStatCategory(cat) {
             state.statCategory = cat;
             document.getElementById('stat-tab-alcalde').classList.toggle('active', cat === 'alcalde');
@@ -862,15 +882,29 @@
                 }]
             };
 
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        color: '#fff',
+                        anchor: 'end',
+                        align: 'start',
+                        offset: 4,
+                        font: { weight: 'bold', size: 11 },
+                        formatter: (val) => val > 0 ? val : ''
+                    }
+                }
+            };
+
             if (barChart) barChart.destroy();
             barChart = new Chart(document.getElementById('barChart'), {
                 type: 'bar',
                 data: chartData,
                 options: {
+                    ...chartOptions,
                     indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
                     scales: { x: { grid: { display: false } } }
                 }
             });
@@ -879,8 +913,48 @@
             pieChart = new Chart(document.getElementById('pieChart'), {
                 type: 'doughnut',
                 data: chartData,
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                options: { 
+                    ...chartOptions,
+                    plugins: { 
+                        ...chartOptions.plugins,
+                        legend: { position: 'bottom', display: true },
+                        datalabels: {
+                            ...chartOptions.plugins.datalabels,
+                            align: 'center',
+                            anchor: 'center'
+                        }
+                    } 
+                }
             });
+
+            // Table Summary
+            let totalB = 0, totalN = 0;
+            filtered.forEach(a => { totalB += a.blancos || 0; totalN += a.nulos || 0; });
+            const grandTotal = totalVal + totalB + totalN;
+
+            document.getElementById('votos-rows').innerHTML = PARTIDOS
+                .map(p => ({ ...p, count: totals[p.id] }))
+                .sort((a, b) => b.count - a.count)
+                .map(p => `
+                    <tr>
+                        <td>
+                            <div style="font-weight:700;">${p.sigla}</div>
+                            <div style="font-size:0.6rem; color:#888;">${p.nombre}</div>
+                        </td>
+                        <td style="text-align:right; font-weight:700;">${p.count}</td>
+                        <td style="text-align:right; color:#666;">${totalVal > 0 ? ((p.count / totalVal) * 100).toFixed(1) : 0}%</td>
+                    </tr>
+                `).join('');
+
+            document.getElementById('votos-footer').innerHTML = `
+                <tr style="background:#f9f9f9;"><td style="padding:10px;">Blancos</td><td style="text-align:right; padding:10px;">${totalB}</td><td style="text-align:right; padding:10px;">-</td></tr>
+                <tr style="background:#f9f9f9;"><td style="padding:10px;">Nulos</td><td style="text-align:right; padding:10px;">${totalN}</td><td style="text-align:right; padding:10px;">-</td></tr>
+                <tr style="background:#e0eee0; font-weight:800; color:var(--mts-verde);">
+                    <td style="padding:10px;">TOTAL GENERAL</td>
+                    <td style="text-align:right; padding:10px;">${grandTotal}</td>
+                    <td style="text-align:right; padding:10px;">100%</td>
+                </tr>
+            `;
 
             // D'Hondt
             if (state.statCategory === 'concejales' && totalVal > 0) {
