@@ -598,12 +598,22 @@
         });
 
         let isSyncing = false;
+        let firstSyncDone = false;
         function startCloudSync() {
             if (isSyncing || !db) return;
             isSyncing = true;
+            
+            // Indicar sincronización inicial
+            if (navigator.onLine) {
+                const badge = document.getElementById('connection-badge');
+                badge.innerText = "🔄 SINCRONIZANDO...";
+                badge.style.background = "#007bff";
+                badge.style.color = "white";
+            }
 
             fbDB.ref("actas").on("value", snapshot => {
                 const data = snapshot.val();
+                firstSyncDone = true;
                 if (data) {
                     const cloudList = Object.values(data);
                     state.actas = cloudList;
@@ -653,7 +663,7 @@
             selectedRecinto: null,
             selectedMesa: null,
             actas: [],
-            statCategory: 'Alcalde'
+            statCategory: 'alcalde' // Corregido a minúsculas para consistencia
         };
 
         // === MÓDULO: INDEXEDDB ===
@@ -846,7 +856,14 @@
         }
 
         function renderStats() {
-            const filtered = state.actas.filter(a => a.categoria === state.statCategory);
+            // Si no hay datos y estamos online, mostrar mensaje de carga
+            if (!firstSyncDone && navigator.onLine && state.actas.length === 0) {
+                document.getElementById('votos-rows').innerHTML = '<tr><td colspan="3" style="text-align:center; padding:2rem; color:#888;">☁️ Obteniendo datos de la nube...</td></tr>';
+                document.getElementById('winner-banner').style.display = 'none';
+                return;
+            }
+
+            const filtered = state.actas.filter(a => a.categoria.toLowerCase() === state.statCategory.toLowerCase());
             const totals = {};
             let totalVal = 0;
             PARTIDOS.forEach(p => totals[p.id] = 0);
