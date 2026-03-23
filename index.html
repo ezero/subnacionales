@@ -659,7 +659,7 @@
         ];
 
         let state = {
-            currentCategory: 'Alcalde',
+            currentCategory: 'alcalde',
             selectedRecinto: null,
             selectedMesa: null,
             actas: [],
@@ -726,7 +726,7 @@
             const recinto = RECINTOS.find(r => r.id == recintoId);
             select.innerHTML = '<option value="" disabled selected>-- SELECCIONE MESA --</option>' +
                 recinto.mesas.map(m => {
-                    const isReg = state.actas.some(a => a.recinto_id == recintoId && a.mesa_id == m && a.categoria == state.currentCategory);
+                    const isReg = state.actas.some(a => a.recinto_id == recintoId && a.mesa_id == m && a.categoria.toLowerCase() == state.currentCategory.toLowerCase());
                     return `<option value="${m}">${isReg ? '✓' : ''} Mesa ${m}</option>`;
                 }).join('');
         }
@@ -758,7 +758,7 @@
 
         function renderVotingForm() {
             const container = document.getElementById('voting-rows');
-            const key = `${state.selectedRecinto}_${state.selectedMesa}_${state.currentCategory}`;
+            const key = `${state.selectedRecinto}_${state.selectedMesa}_${state.currentCategory.toLowerCase()}`;
             const existing = state.actas.find(a => a.key === key);
 
             container.innerHTML = PARTIDOS.map(p => `
@@ -795,7 +795,7 @@
         }
 
         async function saveActa() {
-            const key = `${state.selectedRecinto}_${state.selectedMesa}_${state.currentCategory}`;
+            const key = `${state.selectedRecinto}_${state.selectedMesa}_${state.currentCategory.toLowerCase()}`;
             const votos = {};
             let totalValidos = 0;
             document.querySelectorAll('#voting-rows .input-votos').forEach(input => {
